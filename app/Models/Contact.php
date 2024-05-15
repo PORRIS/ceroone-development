@@ -9,4 +9,13 @@ class Contact extends Model
 {
     use HasFactory;
     protected $table = 'cro_contacts';
+    protected $fillable = [
+        'id',
+        'name',
+        'email',
+        'billAddress'
+        ];
+    protected $casts = [
+        'id' =>'integer'
+        ];
 }

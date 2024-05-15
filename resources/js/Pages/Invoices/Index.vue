@@ -11,40 +11,42 @@ import InputGroup from "@/Components/InputGroup.vue";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DataTable from 'datatables.net-vue3';
-import DataTablesCore from 'datatables.net'
-import 'datatables.net-select';
-import 'datatables.net-responsive';
+import DataTablesCore from 'datatables.net-bs5'
 DataTable.use(DataTablesCore);
-
-const columns = [
-    { data: 'name', title: 'name' },
-    { data: 'email', title: 'email' }
-];
-
 import { Head, useForm } from '@inertiajs/vue3';
 import {ref} from  'vue';
 
+const columnsInvoices = [
+    { name: 'id', title:'id',searchable: false, orderable: false, visible: false },
+    { name: 'contactName', title:'Nombre Contacto', searchable: true, orderable: false, visible: true  },
+    { name: 'notes', title:'Notas',  searchable: false, orderable: false, visible: false   },
+    { name: 'subtotal', title:'Sub Total',  searchable: true, orderable: false, visible: true   },
+    { name: 'total', title:'Total',  searchable: true, orderable: false, visible: true   },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'products', title:'',  searchable: false, orderable: false, visible: false   },
 
-const v = ref({id:'',name:'',email:'',clientRecord:[],billCountryCode:''});
+];
+
+const v = ref({id:'',contactName:'',notes:'',subtotal:'',total:'',products:[]});
 
 const props = defineProps({
-    contacts: {
-        type: Object
-    },
-    countries:{
+    invoices: {
         type: Object
     }
 });
 
 const form = useForm({
     id:'',
-    name:'',
-    email:'',
-    billCountryCode:''
+    contactName:'',
+    notes:'',
+    subtotal:'',
+    total:''
 });
 
 
-const showModalView = ref(false);
+const showModalInvoiceView = ref(false);
 const showModalForm = ref(false);
 const showModalDelete = ref(false);
 
@@ -54,35 +56,39 @@ const message = ref('');
 const msj = ref('');
 const classmessage = ref('hidden');
 
-const openModalView = (contact) => {
-    v.value.id = contact.id;
-    v.value.name = contact.name;
-    v.value.email = contact.email;
-    v.value.clientRecord = contact.clientRecord;
+const openModalInvoicesView = (contact) => {
+    v.value.id = contact[0];
+    v.value.contactName = contact[1];
+    v.value.notes = contact[2];
+    v.value.subtotal =  contact[3];
+    v.value.total =  contact[4];
+    v.value.products =  contact[8];
 
-    showModalView.value = true;
+
+    showModalInvoiceView.value = true;
 }
 const openModalDelete = (contact) => {
     showModalDelete.value = true;
-    v.value.id = contact.id;
-    v.value.name = contact.name;
+    v.value.id = contact[0];
+    v.value.contactName =  contact[1];
 }
 const openModalForm = (option,contact) => {
     showModalForm.value = true;
     operation.value = option;
     if(option === 1){
-        title.value = 'Crear Contacto';
+        title.value = 'Crear Factura';
     }else{
-        title.value = 'Editar Contacto';
-        form.name =  contact.name;
-        form.email =  contact.email;
-        form.billCountryCode = contact.billCountryCode;
-        v.value.id = contact.id;
+        title.value = 'Editar Factura';
+        form.contactName =  contact[1];
+        form.notes =   contact[2];
+        form.subtotal = contact[3];
+        form.total = contact[4];
+        v.value.id = contact[0];
     }
 }
 
 const closeModalView = () => {
-    showModalView.value = false;
+    showModalInvoiceView.value = false;
 }
 const closeModalDelete = () => {
     showModalDelete.value = false;
@@ -92,27 +98,28 @@ const closeModalForm = () => {
     form.reset();
 }
 
-const transformData = (string) => {
-    let json = JSON.parse(string);
-    let res = {};
-    for (let key in json) {
-        res[namesContact[key]] = json[key];
-    }
-    return res;
-}
+
 
 const save = ()=>{
     //operacion de nuevo registro = 1
     if(operation.value === 1){
-        form.post(route('contacts.store'),{
-            onSuccess: () =>{ok('Contacto Creado')}
+        form.post(route('invoices.store'),{
+            onSuccess: () =>{ok('Factura Creada')}
         });
     }else{
         //operacion actualizar
-        form.put(route('contacts.update',v.value.id),{
-            onSuccess: () =>{ok('Contacto Actualizado')}
+        form.put(route('invoices.update',v.value.id),{
+            onSuccess: () =>{ok('Factura Actualizada')}
         });
     }
+
+}
+
+let dt1;
+const inputtable = ref()
+const reloadTable = ()=>{
+    dt1 = inputtable.value.dt;
+    dt1.ajax.url('/datatable/invoices').load();
 
 }
 
@@ -120,6 +127,7 @@ const ok = (message)=>{
     closeModalForm();
     closeModalDelete();
     form.reset();
+    reloadTable();
     msj.value = message;
     classmessage.value = 'block';
     setTimeout(() => {
@@ -127,46 +135,77 @@ const ok = (message)=>{
     }, 5000);
 }
 
-const deleteContact = () =>{
-    form.delete(route('contacts.destroy',v.value.id),{
+const deleteInvoice = () =>{
+    form.delete(route('invoices.destroy',v.value.id),{
         onSuccess: () =>{
-            ok('Contacto Eliminado')
+            ok('Factura Eliminada')
         }
     })
 
 }
-
-
-const namesContact =   {
-    "num": "Numero",
-    "name": "Nombre",
-    "salesChannel": "canal de ventas",
-    "expensesAccount": "cuenta de gastos",
-    "dueDays": "Días Vencidos",
-    "paymentDay": "Dia de pago",
-    "paymentMethod": "Método de pago",
-    "discount": "Descuento",
-    "language": "Idioma",
-    "currency":"Divisa",
-    "salesTax": "Impuesto",
-    "purchasesTax":"impuesto de compra",
-    "accumulateInForm347":"Acumular modelo 347",
-    "website":"Sitio web",
-    "job": "Trabajo",
-    "phone":"Telefono",
-    "email":"Correo",
-    "sendDocuments":"Enviar Archivo",
-    "address":"Direccion",
-    "city": "Ciudad",
-    "postalCode": "Codigo Postal",
-    "province": "Provincia",
-    "country": "Pais",
-    "countryCode": "Pais Codigo",
-    "notes": "Notas",
-    "privateNotes": "nota privada"
+const transformContactData = (json) => {
+    let res = {};
+    for (let key in json) {
+        if(key != 'tags')
+            res[namesContact[key]] = json[key];
+    }
+    return res;
+}
+const getLanguageSettings =() =>{
+    return {
+        search: 'Buscar',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron resultados',
+        infoFiltered: '(filtrado de un total de _MAX_ registros) ',
+        infoEmpty: 'Mostrando registros del 0 al 0 de un total de 0 registros. ',
+        emptyTable: 'Ningún dato disponible en esta tabla',
+        info: 'Mostrando <b>_START_ a _END_</b> de _TOTAL_ registros. ',
+        select: {
+            rows: {
+                _: "Tienes seleccionadas %d filas",
+                0: "<b>Click</b> en una fila para seleccionarla",
+                1: "1 fila seleccionada"
+            }
+        }
+    };
 }
 
-
+const options = {
+    responsive: true,
+    select: true,
+    processing: true,
+    serverSide: true,
+    autoWidth: false,
+    scrollX: true,
+    destroy: true,
+    scrollCollapse: true,
+    iDisplayLength: 10,
+    deferRender: true,
+    language: getLanguageSettings(),
+}
+const namesContact =   {
+    "date": "Fecha",
+    "amount": "Monto",
+    "name": "Nombre",
+    "desc": "desc",
+    "price": "Precio",
+    "units": "Unidades",
+    "projectid": "id proyecto",
+    "discount": "Descuento",
+    "tax": "Impuesto",
+    "taxes":"Impuestos",
+    "tags": "Tags",
+    "retention":"Retención",
+    "weight":"peso",
+    "costPrice":"precio de coste",
+    "sku": "sku",
+    "account":"cuenta",
+    "productId":"Id del producto",
+    "variantId":"ID de variante"
+}
+const boxes = document.getElementsByTagName("div");
+boxes[0].classList.remove("dt-input");
 </script>
 
 <template>
@@ -202,72 +241,56 @@ const namesContact =   {
 
             <div class="overflow-hidden mb-8 w-full rounded-lg border shadow-xs">
                 <div class="overflow-x-auto w-full">
+                    <DataTable :columns="columnsInvoices"    :options="options"  class="display nowrap"
+                                 ajax="/datatable/invoices" ref="inputtable"  id="datatable2">
 
-                    <DataTable  class="display"   width="100%">
-                        <thead>
-                        <tr>
-                            <th>A</th>
-                            <th>B</th>
-                        </tr>
-                        </thead>
-                    </DataTable>
-                    <DataTable :columns="columns" class="w-full whitespace-no-wrap" ajax="/datatable/contacts">
-                        <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
+                        <template #column-5="props">
+                            <SecondaryButton @click="openModalInvoicesView(props.rowData)">Ver</SecondaryButton>
+                        </template>
+                        <template #column-6="props">
+                            <WarningButton  @click="openModalForm(2,props.rowData)">Editar</WarningButton>
+                        </template>
+                        <template #column-7="props">
+                            <DangerButton @click="openModalDelete(props.rowData)">Eliminar</DangerButton>
+                        </template>
 
-                        </tr>
-                        </thead>
                     </DataTable>
-                </div>
-                <div
-                    class="px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase bg-gray-50 border-t sm:grid-cols-9">
-                    <pagination :links="contacts.links" />
                 </div>
             </div>
         </div>
 
-        <modal :show="showModalView" @close="closeModalView" >
+        <modal :show="showModalInvoiceView" @close="closeModalView" :max-width="100" >
             <div class="p-6 ">
-
                 <div class="grid md:grid-cols-2 md:gap-6">
                     <div class="relative z-0 w-full mb-5 group">
-                        <p>Nombre: <span class="text-lg font-medium text-gray-900">{{v.name}} </span></p>
+                        <p>Nombre: <span class="text-lg font-medium text-gray-900">{{v.contactName}} </span></p>
                     </div>
                     <div class="relative z-0 w-full mb-5 group">
-                        <p>Correo: <span class="text-lg font-medium text-gray-900">{{v.email}}</span></p>
+                        <p>Nota: <span class="text-lg font-medium text-gray-900">{{v.notes}}</span></p>
                     </div>
                 </div>
                 <div class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-2">
-                    <div class="flex items-center  bg-white rounded-lg shadow-xs ">
+                    <div class="flex items-center  bg-white rounded-lg shadow-xs" v-for="(e,k) in  JSON.parse(v.products)">
                         <div>
                             <p class="mb-2 font-medium text-gray-600 dark:text-gray-400">
-                                Extra:
+                                Producto {{k}}:
                             </p>
                             <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
                                 <ol>
-                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformData(v.clientRecord)">
-                                        {{(k)+': '+e}}
+                                    <li class="text-lg font-medium text-gray-900" >
+                                        <ol>
+                                            <li class="text-lg font-medium text-gray-900" v-for="(j,i) in transformContactData(e)">
+                                                {{(i)+': '+j}}
+                                            </li>
+                                        </ol>
+
+
                                     </li>
                                 </ol>
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white rounded-lg shadow-xs ">
-                        <div>
-                            <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Extra:
-                            </p>
-                            <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                                <ol>
-                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformData(v.clientRecord)">
-                                        {{(k)+': '+e}}
-                                    </li>
-                                </ol>
-                            </p>
-                        </div>
-                    </div>
+
                 </div>
 
             </div>
@@ -280,26 +303,35 @@ const namesContact =   {
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">{{title}}</h2>
                 <div class="mt-6 mb-6 space-y-2 max-w-xl">
-                    <InputGroup :text="'Nombre'" :required="'required'" v-model="form.name" :type="'text'">
+                    <InputGroup :text="'Nombre'" :required="'required'" v-model="form.contactName" :type="'text'">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
                     </InputGroup>
-                    <InputError class="mt-1" :message="form.errors.name"></InputError>
+                    <InputError class="mt-1" :message="form.errors.contactName"></InputError>
 
-                    <InputGroup :text="'Correo'" :required="'required'" v-model="form.email" :type="'text'">
+                    <InputGroup :text="'Nota'" :required="'required'" v-model="form.notes" :type="'text'">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 1 0-2.636 6.364M16.5 12V8.25" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+
+                    </InputGroup>
+                    <InputError class="mt-1" :message="form.errors.notes"></InputError>
+
+                    <InputGroup :text="'Sub Total'" :required="'required'" v-model="form.subtotal" :type="'text'">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                         </svg>
                     </InputGroup>
-                    <InputError class="mt-1" :message="form.errors.email"></InputError>
+                    <InputError class="mt-1" :message="form.errors.subtotal"></InputError>
 
-                    <SelectInput :text="'Pais'" :required="'required'" v-model="form.billCountryCode" :options="countries">
+                    <InputGroup :text="'Total'" :required="'required'" v-model="form.total" :type="'text'">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                         </svg>
-                    </SelectInput>
-                    <InputError class="mt-1" :message="form.errors.billCountryCode"></InputError>
+
+                    </InputGroup>
+                    <InputError class="mt-1" :message="form.errors.total"></InputError>
 
                     <PrimaryButton @click="save">Guardar</PrimaryButton>
                 </div>
@@ -313,9 +345,9 @@ const namesContact =   {
         <modal :show="showModalDelete" @close="closeModalDelete">
             <div class="p-6">
                 <p class="text-2xl text-gray-500">
-                    Seguro desea elimiar el contacto
-                    <span class="text-2xl font-medium text-gray-900">{{v.name}} </span>? </p>
-                <PrimaryButton @click="deleteContact">Si, Eliminar</PrimaryButton>
+                    Seguro desea elimiar la factura
+                    <span class="text-2xl font-medium text-gray-900">{{v.contactName}} </span>? </p>
+                <PrimaryButton @click="deleteInvoice">Si, Eliminar</PrimaryButton>
             </div>
             <div class="m-6 flex justify-end">
                 <SecondaryButton @click="closeModalDelete">Cancelar</SecondaryButton>
@@ -326,5 +358,9 @@ const namesContact =   {
 </template>
 <style>
 @import 'datatables.net-dt';
+div.dt-container select.dt-input {
+    width:16%;
+}
 </style>
+
 

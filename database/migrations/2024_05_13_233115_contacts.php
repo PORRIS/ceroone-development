@@ -28,12 +28,7 @@ return new class extends Migration
             $table->string('groupId')->nullable();
             $table->json('clientRecord')->nullable();
             $table->json('supplierRecord')->nullable();
-            $table->string('billAddress')->nullable();
-            $table->string('billCity')->nullable();
-            $table->integer('billPostalCode')->nullable();
-            $table->string('billProvince')->nullable();
-            $table->string('billCountryCode')->nullable();
-            $table->string('billInfo')->nullable();
+            $table->json('billAddress')->nullable();
             $table->json('customFields')->nullable();
             $table->json('defaults')->nullable();
             $table->json('socialNetworks')->nullable();

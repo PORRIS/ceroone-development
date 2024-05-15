@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Datatables\ContactsDatatable;
+use App\Http\Requests\ContactRequest;
 use App\Models\Contact;
 use App\Models\Country;
 use Freshbitsweb\Laratables\Laratables;
@@ -21,24 +22,17 @@ class ContactController extends Controller
     public function ContactDatatable(Request $request)
     {
         $records = Laratables::recordsOf(Contact::class, ContactsDatatable::class);
-        dd($records);
         return response()->json($records, 200);
     }
 
-    public function store(Request $request)
+    public function store(ContactRequest $request)
     {
-        $request->validate([
-            'name' => 'required|max:80',
-            'email' => 'required|max:80',
-            'billCountryCode' => 'required|max:80',
-        ]);
         $id_uniq = uniqid(time());
         $salt = "hash";
         $contact = new Contact();
         $contact->uuid = $id_uniq;
         $contact->name = $request->name;
         $contact->code = $id_uniq;
-        $contact->billCountryCode = $request->billCountryCode;
         $contact->email = $request->email;
         $contact->isperson = 1;
         $contact->createdAt = 1;
@@ -49,13 +43,8 @@ class ContactController extends Controller
         return redirect('contacts');
     }
 
-    public function update(Request $request,$idContact)
+    public function update(ContactRequest $request,$idContact)
     {
-        $request->validate([
-            'name' => 'required|max:80',
-            'email' => 'required|max:80',
-            'billCountryCode' => 'required|max:80',
-        ]);
         $contact = Contact::query()->find($idContact);
         $contact->name = $request->name;
         $contact->email = $request->email;

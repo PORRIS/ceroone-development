@@ -10,16 +10,30 @@ import DarkButton from '@/Components/DarkButton.vue';
 import InputGroup from "@/Components/InputGroup.vue";
 import SelectInput from "@/Components/SelectInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import DataTable from 'datatables.net-vue3';
-import select2 from 'select2';
-select2();
-import Select2 from 'vue3-select2-component';
 
+import DataTable from 'datatables.net-vue3';
+import DataTablesCore from 'datatables.net'
+import 'datatables.net-select';
+import 'datatables.net-responsive';
+DataTable.use(DataTablesCore);
 import { Head, useForm } from '@inertiajs/vue3';
 import {ref} from  'vue';
 
+const columnsContact = [
+    { name: 'id', title:'id',searchable: false, orderable: false, visible: false },
+    { name: 'name', title:'NOMBRE', searchable: true, orderable: false, visible: true  },
+    { name: 'email', title:'CORREO',  searchable: true, orderable: false, visible: true   },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'id', title:'',searchable: false, orderable: false, visible: true },
+    { name: 'clientRecord', title:'',  searchable: false, orderable: false, visible: false   },
+    { name: 'billAddress', title:'',  searchable: false, orderable: false, visible: false   },
 
-const v = ref({id:'',name:'',email:'',clientRecord:[],billCountryCode:''});
+];
+
+
+
+const v = ref({id:'',name:'',email:'',clientRecord:[],billCountryCode:'',billAddres:[]});
 
 const props = defineProps({
     contacts: {
@@ -37,14 +51,9 @@ const form = useForm({
     billCountryCode:''
 });
 
-const  optionSelect2 = ref([]);
-props.countries.map( (row) =>(
-    optionSelect2.value.push({'id':row.id,'text':row.name})
-));
-
-const showModalView = ref(false);
-const showModalForm = ref(false);
-const showModalDelete = ref(false);
+const showModalContactView = ref(false);
+const showModalContactForm = ref(false);
+const showModalContactDelete = ref(false);
 
 const title = ref('');
 const operation = ref(1);
@@ -52,45 +61,46 @@ const message = ref('');
 const msj = ref('');
 const classmessage = ref('hidden');
 
-const openModalView = (contact) => {
-    v.value.id = contact.id;
-    v.value.name = contact.name;
-    v.value.email = contact.email;
-    v.value.clientRecord = contact.clientRecord;
+const openModalContactView = (contact) => {
+    v.value.id = contact[0];
+    v.value.name = contact[1];
+    v.value.email = contact[2];
+    v.value.clientRecord =  contact[6];
+    v.value.billAddres =  contact[7];
 
-    showModalView.value = true;
+    showModalContactView.value = true;
 }
-const openModalDelete = (contact) => {
-    showModalDelete.value = true;
-    v.value.id = contact.id;
-    v.value.name = contact.name;
+const openModalContactDelete = (contact) => {
+    showModalContactDelete.value = true;
+    v.value.id = contact[0];
+    v.value.name =  contact[2];
 }
-const openModalForm = (option,contact) => {
-    showModalForm.value = true;
+const openModalContactForm = (option,contact) => {
+    showModalContactForm.value = true;
     operation.value = option;
     if(option === 1){
         title.value = 'Crear Contacto';
     }else{
         title.value = 'Editar Contacto';
-        form.name =  contact.name;
-        form.email =  contact.email;
-        form.billCountryCode = contact.billCountryCode;
-        v.value.id = contact.id;
+        form.name =  contact[1];
+        form.email =   contact[2];
+        form.billCountryCode = contact[6];
+        v.value.id = contact[0];
     }
 }
 
-const closeModalView = () => {
-    showModalView.value = false;
+const closeModalContactView = () => {
+    showModalContactView.value = false;
 }
-const closeModalDelete = () => {
-    showModalDelete.value = false;
+const closeModalContactDelete = () => {
+    showModalContactDelete.value = false;
 }
-const closeModalForm = () => {
-    showModalForm.value = false;
+const closeModalContactForm = () => {
+    showModalContactForm.value = false;
     form.reset();
 }
 
-const transformData = (string) => {
+const transformContactData = (string) => {
         let json = JSON.parse(string);
         let res = {};
         for (let key in json) {
@@ -99,7 +109,7 @@ const transformData = (string) => {
         return res;
 }
 
-const save = ()=>{
+const saveContact = ()=>{
     //operacion de nuevo registro = 1
     if(operation.value === 1){
         form.post(route('contacts.store'),{
@@ -115,8 +125,9 @@ const save = ()=>{
 }
 
 const ok = (message)=>{
-    closeModalForm();
-    closeModalDelete();
+    closeModalContactForm();
+    closeModalContactDelete();
+    reloadTable();
     form.reset();
     msj.value = message;
     classmessage.value = 'block';
@@ -133,8 +144,46 @@ const deleteContact = () =>{
     })
 
 }
+let dt1;
+const inputtable2 = ref()
+const reloadTable = ()=>{
+    dt1 = inputtable2.value.dt;
+    dt1.ajax.url('/datatable/contacts').load();
 
+}
+ const getLanguageSettings =() =>{
+    return {
+        search: 'Buscar',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron resultados',
+        infoFiltered: '(filtrado de un total de _MAX_ registros) ',
+        infoEmpty: 'Mostrando registros del 0 al 0 de un total de 0 registros. ',
+        emptyTable: 'Ningún dato disponible en esta tabla',
+        info: 'Mostrando <b>_START_ a _END_</b> de _TOTAL_ registros. ',
+        select: {
+            rows: {
+                _: "Tienes seleccionadas %d filas",
+                0: "<b>Click</b> en una fila para seleccionarla",
+                1: "1 fila seleccionada"
+            }
+        }
+    };
+}
 
+const options = {
+    responsive: true,
+    select: true,
+    processing: true,
+    serverSide: true,
+    autoWidth: false,
+    scrollX: true,
+    destroy: true,
+    scrollCollapse: true,
+    iDisplayLength: 10,
+    deferRender: true,
+    language: getLanguageSettings(),
+}
 const namesContact =   {
     "num": "Numero",
     "name": "Nombre",
@@ -163,7 +212,8 @@ const namesContact =   {
     "notes": "Notas",
     "privateNotes": "nota privada"
 }
-
+const boxes = document.getElementsByTagName("div");
+boxes[0].classList.remove("dt-input");
 </script>
 
 <template>
@@ -172,7 +222,7 @@ const namesContact =   {
 	<MainLayout>
 		<template #header>
 			Contactos
-            <DarkButton @click="openModalForm(1)">
+            <DarkButton @click="openModalContactForm(1)">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
                 </svg>
@@ -199,42 +249,26 @@ const namesContact =   {
 
 			<div class="overflow-hidden mb-8 w-full rounded-lg border shadow-xs">
 				<div class="overflow-x-auto w-full">
-					<table class="w-full whitespace-no-wrap">
-						<thead>
-							<tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase bg-gray-50 border-b">
-								<th class="px-4 py-3">Name</th>
-								<th class="px-4 py-3">Email</th>
-							</tr>
-						</thead>
-						<tbody class="bg-white divide-y">
-							<tr v-for="contact in contacts.data" :key="contact.id" class="text-gray-700">
-								<td class="px-4 py-3 text-sm">
-									{{ contact.name }}
-								</td>
-								<td class="px-4 py-3 text-sm">
-									{{ contact.email }}
-								</td>
-                                <td class="px-4 py-3 text-sm">
-                                    <SecondaryButton @click="openModalView(contact)">Ver</SecondaryButton>
-                                </td>
-                                <td class="px-4 py-3 text-sm">
-                                    <WarningButton  @click="openModalForm(2,contact)">Editar</WarningButton>
-                                </td>
-                                <td class="px-4 py-3 text-sm">
-                                    <DangerButton @click="openModalDelete(contact)">Eliminar</DangerButton>
-                                </td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				<div
-					class="px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase bg-gray-50 border-t sm:grid-cols-9">
-					<pagination :links="contacts.links" />
+                    <DataTable :columns="columnsContact"    :options="options"  class="display nowrap"
+                               ajax="/datatable/contacts" ref="inputtable2"  id="datatable1">
+
+                        <template #column-3="props">
+                            <SecondaryButton @click="openModalContactView(props.rowData)">Ver</SecondaryButton>
+                        </template>
+                        <template #column-4="props">
+                            <WarningButton  @click="openModalContactForm(2,props.rowData)">Editar</WarningButton>
+                        </template>
+                        <template #column-5="props">
+                            <DangerButton @click="openModalContactDelete(props.rowData)">Eliminar</DangerButton>
+                        </template>
+
+                    </DataTable>
+
 				</div>
 			</div>
 		</div>
 
-        <modal :show="showModalView" @close="closeModalView" >
+        <modal :show="showModalContactView" @close="closeModalContactView" >
             <div class="p-6 ">
 
                 <div class="grid md:grid-cols-2 md:gap-6">
@@ -249,11 +283,11 @@ const namesContact =   {
                     <div class="flex items-center  bg-white rounded-lg shadow-xs ">
                         <div>
                             <p class="mb-2 font-medium text-gray-600 dark:text-gray-400">
-                                Extra:
+                                Registro del cliente:
                             </p>
                             <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
                                 <ol>
-                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformData(v.clientRecord)">
+                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformContactData(v.clientRecord)">
                                         {{(k)+': '+e}}
                                     </li>
                                 </ol>
@@ -263,11 +297,11 @@ const namesContact =   {
                     <div class="flex items-center bg-white rounded-lg shadow-xs ">
                         <div>
                             <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Extra:
+                                Direccion:
                             </p>
                             <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
                                 <ol>
-                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformData(v.clientRecord)">
+                                    <li class="text-lg font-medium text-gray-900" v-for="(e,k) in transformContactData(v.billAddres)">
                                         {{(k)+': '+e}}
                                     </li>
                                 </ol>
@@ -278,11 +312,11 @@ const namesContact =   {
 
             </div>
             <div class="m-6 flex justify-end">
-                <SecondaryButton @click="closeModalView">Cancelar</SecondaryButton>
+                <SecondaryButton @click="closeModalContactView">Cancelar</SecondaryButton>
             </div>
         </modal>
 
-        <modal :show="showModalForm" @close="closeModalForm">
+        <modal :show="showModalContactForm" @close="closeModalContactForm">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">{{title}}</h2>
                 <div class="mt-6 mb-6 space-y-2 max-w-xl">
@@ -307,19 +341,17 @@ const namesContact =   {
                     </SelectInput>
                     <InputError class="mt-1" :message="form.errors.billCountryCode"></InputError>
 
-                    <Select2 v-model="form.billCountryCode" :options="optionSelect2" :settings="{width:'100%'}"
-                             @change="form.errors.billCountryCode = $event.target.value"/>
 
-                    <PrimaryButton @click="save">Guardar</PrimaryButton>
+                    <PrimaryButton @click="saveContact">Guardar</PrimaryButton>
                 </div>
 
             </div>
             <div class="m-6 flex justify-end">
-                <SecondaryButton @click="closeModalForm">Cancelar</SecondaryButton>
+                <SecondaryButton @click="closeModalContactForm">Cancelar</SecondaryButton>
             </div>
         </modal>
 
-        <modal :show="showModalDelete" @close="closeModalDelete">
+        <modal :show="showModalContactDelete" @close="closeModalContactDelete">
             <div class="p-6">
                 <p class="text-2xl text-gray-500">
                     Seguro desea elimiar el contacto
@@ -327,9 +359,15 @@ const namesContact =   {
                 <PrimaryButton @click="deleteContact">Si, Eliminar</PrimaryButton>
             </div>
             <div class="m-6 flex justify-end">
-                <SecondaryButton @click="closeModalDelete">Cancelar</SecondaryButton>
+                <SecondaryButton @click="closeModalContactDelete">Cancelar</SecondaryButton>
             </div>
         </modal>
 
 	</MainLayout>
 </template>
+<style>
+@import 'datatables.net-dt';
+div.dt-container select.dt-input {
+    width:16%;
+}
+</style>

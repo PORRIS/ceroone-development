@@ -2,13 +2,12 @@
 
 namespace App\Datatables;
 
-use App\Models\Contact;
-use Illuminate\Support\Facades\Log;
+use App\Models\Invoice;
 use \Illuminate\Support\Facades\Request;
 
-class ContactsDatatable
+class InvoicesDatatable
 {
-    public static function laratablesQueryConditions(Contact $model)
+    public static function laratablesQueryConditions(Invoice $model)
     {
         $baseQuery = $model->query();
         $filtroInicio = Request::route('start');
@@ -20,7 +19,7 @@ class ContactsDatatable
     }
     public static function laratablesAdditionalColumns(): array
     {
-        return ['id','name', 'email'];
+        return ['id'];
     }
 
 }

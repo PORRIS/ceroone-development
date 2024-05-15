@@ -23,7 +23,15 @@ Route::get('/', function () {
 
 Route::resource('contacts', ContactController::class);
 Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
-Route::get('datatable/contacts', [ContactController::class, 'ContactDatatable'])->name('contacts.datatable');
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-Route::get('/accounting-accounts', [AccountingAccountController::class, 'index'])->name('accounting-accounts.index');
+Route::get('datatable/contacts/{start?}/{end?}', [ContactController::class, 'ContactDatatable'])->name('contacts.datatable');
 
+Route::resource('invoices', InvoiceController::class);
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('datatable/invoices/{start?}/{end?}', [InvoiceController::class, 'Datatable'])->name('invoices.datatable');
+
+Route::resource('accounts', AccountingAccountController::class);
+Route::get('/accounts', [AccountingAccountController::class, 'index'])->name('accounts.index');
+Route::get('datatable/accounts/{start?}/{end?}', [AccountingAccountController::class, 'accountsDatatable'])->name('accounts.datatable');
+
+
+require __DIR__.'/synchronizer.php';

@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AccountingAccount extends Model
+class ControlSynchronization extends Model
 {
     use HasFactory;
-    protected $table = 'cro_accounts';
+    protected $table = 'cro_control_synchronization';
 }

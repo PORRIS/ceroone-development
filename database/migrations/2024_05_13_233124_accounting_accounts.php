@@ -11,7 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('cro_accounts', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid');
+            $table->string('name')->nullable();
+            $table->string('type')->nullable();
+            $table->string('balance')->nullable();
+            $table->bigInteger('accountNumber')->nullable();
+            $table->string('iban')->nullable();
+            $table->string('swift')->nullable();
+            $table->integer('sync');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('cro_accounts');
     }
 };
