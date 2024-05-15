@@ -172,7 +172,7 @@ class SyncUtility
 
         } catch (Exception $exception) {
             $this->logInfo('Error en processRequest');
-            $this->logInfo('Excepcion:',[$exception]);
+            Log::error($exception);
             exit;
         }
     }
@@ -193,7 +193,7 @@ class SyncUtility
 
         } catch (Exception $exception) {
             $this->logInfo('Error en processAccountsRequest');
-            $this->logInfo('Excepcion:',[$exception]);
+            Log::error($exception);
             exit;
         }
     }

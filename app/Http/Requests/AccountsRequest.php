@@ -24,8 +24,8 @@ class AccountsRequest extends FormRequest
         return [
             'name' => 'required|max:80',
             'type' => 'required|max:80',
-            'balance' => 'required|numeric|max:80',
-            'accountNumber' => 'required|numeric|max:80',
+            'balance' => 'required|numeric',
+            'accountNumber' => 'required|numeric',
             'iban' => 'nullable|max:80',
             'swift' => 'nullable|max:80',
         ];

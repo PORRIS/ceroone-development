@@ -24,8 +24,8 @@ class InvoicesRequest extends FormRequest
         return [
             'contactName' => 'required|max:80',
             'notes' => 'nullable|max:80',
-            'subtotal' => 'required|numeric|max:80',
-            'total' => 'required|numeric|max:80',
+            'subtotal' => 'required|numeric',
+            'total' => 'required|numeric',
         ];
     }
     public function attributes()
