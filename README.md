@@ -64,3 +64,16 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Intrucciones
+1. Clonar el proyecto
+   git clone https://github.com/PORRIS/ceroone-development.git
+2. Una vez clonado el repositorio entrar al proyecto
+3. Ejecutar:   composer install --prefer-dist --no-dev
+4. Crear el archivo .env (se envía uno adjunto en el correo)
+5. En el archivo .env colocar el nombre de la base de datos y sus credenciales
+6. Para ejecutar las migraciones: php artisan migrate --seed
+7. Ejecutar: npm install para las dependencias de node.js
+8. Ejecutar: npm run build
+9. Ejecutar: php artisan serve --port=80
+   entrar a http://localhost
